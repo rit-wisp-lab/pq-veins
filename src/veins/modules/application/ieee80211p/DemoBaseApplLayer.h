@@ -33,6 +33,7 @@
 #include "veins/modules/mac/ieee80211p/DemoBaseApplLayerToMac1609_4Interface.h"
 #include "veins/modules/mobility/traci/TraCIMobility.h"
 #include "veins/modules/mobility/traci/TraCICommandInterface.h"
+#include "veins/modules/messages/j2735_bsm_m.h"
 
 namespace veins {
 
@@ -84,6 +85,9 @@ protected:
 
     /** @brief this function is called upon receiving a DemoSafetyMessage, also referred to as a beacon  */
     virtual void onBSM(DemoSafetyMessage* bsm){};
+
+    /** function to handle standard-compliant BSMs **/
+    virtual void onRealBSM(J2735_bsm* bsm){};
 
     /** @brief this function is called upon receiving a DemoServiceAdvertisement */
     virtual void onWSA(DemoServiceAdvertisment* wsa){};

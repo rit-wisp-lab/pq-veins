@@ -49,7 +49,10 @@ protected:
     void onBSM(DemoSafetyMessage* bsm) override;
     void onWSM(BaseFrame1609_4* wsm) override;
     void onWSA(DemoServiceAdvertisment* wsa) override;
+    void onRealBSM(J2735_bsm* bsm) override;
+    void populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId = LAddress::L2BROADCAST(), int serial = 0) override;
 
+    void handleLowerMsg(cMessage* msg) override;
     void handleSelfMsg(cMessage* msg) override;
     void handlePositionUpdate(cObject* obj) override;
 };

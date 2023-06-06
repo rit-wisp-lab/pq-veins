@@ -48,12 +48,51 @@ void PQV2VApp::onBSM(DemoSafetyMessage* bsm)
 {
     // Your application has received a beacon message from another car or RSU
     // code for handling the message goes here
+    EV << "Received BSM\n";
+}
+
+void PQV2VApp::onRealBSM(J2735_bsm* bsm)
+{
+    EV << "Received J2735 BSM:";
+    EV << "\n\tVehicle ID: " << bsm->getVehicle_id();
+    EV << "\n\tPSID: " << bsm->getPsid() << "\n";
+}
+
+void PQV2VApp::handleLowerMsg(cMessage* msg)
+{
+    BaseFrame1609_4* wsm = dynamic_cast<BaseFrame1609_4*>(msg);
+    ASSERT(wsm);
+    if(J2735_bsm* bsm = dynamic_cast<J2735_bsm*>(wsm)) {
+        receivedBSMs++;
+        onRealBSM(bsm);
+    }
+    else {
+        DemoBaseApplLayer::handleLowerMsg(msg);
+    }
 }
 
 void PQV2VApp::onWSM(BaseFrame1609_4* wsm)
 {
     // Your application has received a data message from another car or RSU
     // code for handling the message goes here, see TraciDemo11p.cc for examples
+
+}
+
+void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int serial)
+{
+    wsm->setRecipientAddress(rcvId);
+    wsm->setBitLength(headerLength);
+
+    if (J2735_bsm* bsm = dynamic_cast<J2735_bsm*>(wsm)) {
+        bsm->setVehicle_id(23);
+        bsm->setPsid(32);
+        bsm->setChannelNumber(static_cast<int>(Channel::cch));
+        bsm->addBitLength(beaconLengthBits);
+        wsm->setUserPriority(beaconUserPriority);
+    }
+    else {
+        DemoBaseApplLayer::populateWSM(wsm);
+    }
 }
 
 void PQV2VApp::onWSA(DemoServiceAdvertisment* wsa)
@@ -64,9 +103,24 @@ void PQV2VApp::onWSA(DemoServiceAdvertisment* wsa)
 
 void PQV2VApp::handleSelfMsg(cMessage* msg)
 {
-    DemoBaseApplLayer::handleSelfMsg(msg);
+    //DemoBaseApplLayer::handleSelfMsg(msg);
+
     // this method is for self messages (mostly timers)
     // it is important to call the DemoBaseApplLayer function for BSM and WSM transmission
+    switch (msg->getKind()) {
+
+    case SEND_BEACON_EVT: {
+        J2735_bsm* bsm = new J2735_bsm();
+        populateWSM(bsm);
+        sendDown(bsm);
+        scheduleAt(simTime() + beaconInterval, sendBeaconEvt);
+        break;
+    }
+    default: {
+        DemoBaseApplLayer::handleSelfMsg(msg);
+    }
+
+    }
 }
 
 void PQV2VApp::handlePositionUpdate(cObject* obj)
