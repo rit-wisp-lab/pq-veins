@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2017 Christoph Sommer <sommer@ccs-labs.org>
+// Copyright (C) 2016 David Eckhoff <david.eckhoff@fau.de>
 //
 // Documentation for these modules is at http://veins.car2x.org/
 //
@@ -20,13 +20,14 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-import org.car2x.veins.nodes.RSU;
-import org.car2x.veins.nodes.Scenario;
+package org.car2x.veins.modules.application.traci;
+import org.car2x.veins.modules.application.ieee80211p.DemoBaseApplLayer;
 
-network RSUExampleScenario extends Scenario
+//
+// network description file for your Veins Application. Add parameters here
+//
+simple PQV2VApp extends DemoBaseApplLayer
 {
-//    submodules:
-//        rsu[1]: RSU {
-//            @display("p=150,140;i=veins/sign/yellowdiamond;is=vs");
-//        }
+    @class(veins::PQV2VApp);
+    string appName = default("PQ-V2V App");
 }
