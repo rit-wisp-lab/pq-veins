@@ -44,7 +44,7 @@ class VEINS_API PQV2VApp : public DemoBaseApplLayer {
 public:
     void initialize(int stage) override;
     void finish() override;
-
+    static int vehicle_id_counter;
 protected:
     void onBSM(DemoSafetyMessage* bsm) override;
     void onWSM(BaseFrame1609_4* wsm) override;
@@ -55,6 +55,9 @@ protected:
     void handleLowerMsg(cMessage* msg) override;
     void handleSelfMsg(cMessage* msg) override;
     void handlePositionUpdate(cObject* obj) override;
+
+    uint32_t beaconCount = 0;
+    uint8_t vehicle_id;
 };
 
 } // namespace veins

@@ -26,12 +26,15 @@ using namespace veins;
 
 Define_Module(veins::PQV2VApp);
 
+int PQV2VApp::vehicle_id_counter;
+
 void PQV2VApp::initialize(int stage)
 {
     DemoBaseApplLayer::initialize(stage);
     if (stage == 0) {
         // Initializing members and pointers of your application goes here
         EV << "Initializing " << par("appName").stringValue() << std::endl;
+        this->vehicle_id = this->vehicle_id_counter++;
     }
     else if (stage == 1) {
         // Initializing members that require initialized other modules goes here
@@ -56,6 +59,8 @@ void PQV2VApp::onRealBSM(J2735_bsm* bsm)
     EV << "Received J2735 BSM:";
     EV << "\n\tVehicle ID: " << bsm->getVehicle_id();
     EV << "\n\tPSID: " << bsm->getPsid() << "\n";
+    this->beaconCount++;
+    EV << "\n\tI have received a total of " << this->beaconCount << " BSMs";
 }
 
 void PQV2VApp::handleLowerMsg(cMessage* msg)
@@ -84,7 +89,7 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
     wsm->setBitLength(headerLength);
 
     if (J2735_bsm* bsm = dynamic_cast<J2735_bsm*>(wsm)) {
-        bsm->setVehicle_id(23);
+        bsm->setVehicle_id(this->vehicle_id);
         bsm->setPsid(32);
         bsm->setChannelNumber(static_cast<int>(Channel::cch));
         bsm->addBitLength(beaconLengthBits);
