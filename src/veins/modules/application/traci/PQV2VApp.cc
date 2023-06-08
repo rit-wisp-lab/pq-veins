@@ -34,7 +34,10 @@ void PQV2VApp::initialize(int stage)
     if (stage == 0) {
         // Initializing members and pointers of your application goes here
         EV << "Initializing " << par("appName").stringValue() << std::endl;
+
+        // Set vehicle ID to a unique number
         this->vehicle_id = this->vehicle_id_counter++;
+
     }
     else if (stage == 1) {
         // Initializing members that require initialized other modules goes here
@@ -95,6 +98,13 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
         bsm->addBitLength(beaconLengthBits);
         wsm->setUserPriority(beaconUserPriority);
     }
+    else if (ECDSA_FULL_SPDU* spdu = dynamic_cast<ECDSA_FULL_SPDU*>(wsm)) {
+        spdu->setVehicle_id(this->vehicle_id);
+        spdu->setPsid(32);
+        spdu->setChannelNumber(static_cast<int>(Channel::cch));
+        spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
+        spdu->setUserPriority(beaconUserPriority);
+    }
     else {
         DemoBaseApplLayer::populateWSM(wsm);
     }
@@ -115,9 +125,17 @@ void PQV2VApp::handleSelfMsg(cMessage* msg)
     switch (msg->getKind()) {
 
     case SEND_BEACON_EVT: {
-        J2735_bsm* bsm = new J2735_bsm();
-        populateWSM(bsm);
-        sendDown(bsm);
+        if(transmissionCounter % 5 == 0) {
+            ECDSA_FULL_SPDU* spdu = new ECDSA_FULL_SPDU();
+            populateWSM(spdu);
+            sendDown(spdu);
+        }
+        else {
+
+        }
+//        J2735_bsm* bsm = new J2735_bsm();
+//        populateWSM(bsm);
+//        sendDown(bsm);
         scheduleAt(simTime() + beaconInterval, sendBeaconEvt);
         break;
     }

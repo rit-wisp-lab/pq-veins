@@ -25,6 +25,7 @@
 #include "veins/veins.h"
 
 #include "veins/modules/application/ieee80211p/DemoBaseApplLayer.h"
+#include "veins/modules/messages/ecdsa_full_spdu_m.h"
 
 using namespace omnetpp;
 
@@ -45,6 +46,8 @@ public:
     void initialize(int stage) override;
     void finish() override;
     static int vehicle_id_counter;
+    static const int ECDSA_FULL_SPDU_SIZE_BITS = 162 * 8;
+
 protected:
     void onBSM(DemoSafetyMessage* bsm) override;
     void onWSM(BaseFrame1609_4* wsm) override;
@@ -58,6 +61,7 @@ protected:
 
     uint32_t beaconCount = 0;
     uint8_t vehicle_id;
+    uint32_t transmissionCounter = 0;
 };
 
 } // namespace veins
