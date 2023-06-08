@@ -13,12 +13,11 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-import veins.modules.messages.BaseFrame1609_4;
-import veins.modules.security.Certificate;
+cplusplus {{ #include "Certificate.h" }}
 
-namespace veins;
-
-packet ECDSA_FULL_SPDU extends BaseFrame1609_4 {
+class Certificate {
+    
+    @existingClass;
     uint8_t vehicle_id;
-    Certificate certificate;
+    
 }

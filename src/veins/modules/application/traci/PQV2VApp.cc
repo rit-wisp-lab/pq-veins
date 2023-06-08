@@ -37,6 +37,7 @@ void PQV2VApp::initialize(int stage)
 
         // Set vehicle ID to a unique number
         this->vehicle_id = this->vehicle_id_counter++;
+        this->pseudonym_certificate = Certificate(this->vehicle_id);
 
     }
     else if (stage == 1) {
@@ -91,18 +92,26 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
     wsm->setRecipientAddress(rcvId);
     wsm->setBitLength(headerLength);
 
-    if (J2735_bsm* bsm = dynamic_cast<J2735_bsm*>(wsm)) {
-        bsm->setVehicle_id(this->vehicle_id);
-        bsm->setPsid(32);
-        bsm->setChannelNumber(static_cast<int>(Channel::cch));
-        bsm->addBitLength(beaconLengthBits);
-        wsm->setUserPriority(beaconUserPriority);
-    }
-    else if (ECDSA_FULL_SPDU* spdu = dynamic_cast<ECDSA_FULL_SPDU*>(wsm)) {
+//    if (J2735_bsm* bsm = dynamic_cast<J2735_bsm*>(wsm)) {
+//        bsm->setVehicle_id(this->vehicle_id);
+//        bsm->setPsid(32);
+//        bsm->setChannelNumber(static_cast<int>(Channel::cch));
+//        bsm->addBitLength(beaconLengthBits);
+//        wsm->setUserPriority(beaconUserPriority);
+//    }
+    if (ECDSA_FULL_SPDU* spdu = dynamic_cast<ECDSA_FULL_SPDU*>(wsm)) {
         spdu->setVehicle_id(this->vehicle_id);
         spdu->setPsid(32);
         spdu->setChannelNumber(static_cast<int>(Channel::cch));
         spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
+        spdu->setUserPriority(beaconUserPriority);
+        spdu->setCertificate(Certificate(this->pseudonym_certificate));
+    }
+    else if (ECDSA_DIGEST_SPDU* spdu = dynamic_cast<ECDSA_DIGEST_SPDU*>(wsm)) {
+        spdu->setVehicle_id(this->vehicle_id);
+        spdu->setPsid(32);
+        spdu->setChannelNumber(static_cast<int>(Channel::cch));
+        spdu->addBitLength(ECDSA_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
         spdu->setUserPriority(beaconUserPriority);
     }
     else {
@@ -131,11 +140,11 @@ void PQV2VApp::handleSelfMsg(cMessage* msg)
             sendDown(spdu);
         }
         else {
-
+           ECDSA_DIGEST_SPDU* spdu = new ECDSA_DIGEST_SPDU();
+           populateWSM(spdu);
+           sendDown(spdu);
         }
-//        J2735_bsm* bsm = new J2735_bsm();
-//        populateWSM(bsm);
-//        sendDown(bsm);
+        transmissionCounter++;
         scheduleAt(simTime() + beaconInterval, sendBeaconEvt);
         break;
     }
@@ -151,4 +160,18 @@ void PQV2VApp::handlePositionUpdate(cObject* obj)
     DemoBaseApplLayer::handlePositionUpdate(obj);
     // the vehicle has moved. Code that reacts to new positions goes here.
     // member variables such as currentPosition and currentSpeed are updated in the parent class
+}
+
+void PQV2VApp::learn_certificate(Certificate* certificate) {
+    this->known_certificates.push_back(*certificate);
+}
+
+bool PQV2VApp::is_known_certificate(Certificate* certificate) {
+    auto idx = std::find_if(this->known_certificates.begin(),
+                            this->known_certificates.end(),
+                            [&certificate](Certificate& obj) {
+                            return obj.getVehicle_id() == certificate->getVehicle_id();
+                            });
+
+    return idx != this->known_certificates.end();
 }

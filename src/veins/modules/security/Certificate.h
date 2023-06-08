@@ -11,14 +11,31 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-//
+// 
 
-import veins.modules.messages.BaseFrame1609_4;
-import veins.modules.security.Certificate;
+#ifndef SRC_VEINS_MODULES_SECURITY_CERTIFICATE_H_
+#define SRC_VEINS_MODULES_SECURITY_CERTIFICATE_H_
 
-namespace veins;
+#include "veins/veins.h"
 
-packet ECDSA_FULL_SPDU extends BaseFrame1609_4 {
+#include <stdint.h>
+
+using namespace omnetpp;
+
+
+class Certificate {
+public:
+    Certificate();
+    Certificate(uint8_t vehicle_id);
+    virtual ~Certificate();
+
+    Certificate(const Certificate &c);
+
+    uint8_t getVehicle_id();
+    void setVehicle_id(uint8_t vehicle_id);
+
+protected:
     uint8_t vehicle_id;
-    Certificate certificate;
-}
+};
+
+#endif /* SRC_VEINS_MODULES_SECURITY_CERTIFICATE_H_ */

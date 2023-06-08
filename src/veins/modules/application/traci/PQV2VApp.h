@@ -23,9 +23,12 @@
 #pragma once
 
 #include "veins/veins.h"
+#include <vector>
 
 #include "veins/modules/application/ieee80211p/DemoBaseApplLayer.h"
 #include "veins/modules/messages/ecdsa_full_spdu_m.h"
+#include "veins/modules/messages/ecdsa_digest_spdu_m.h"
+#include "veins/modules/security/Certificate.h"
 
 using namespace omnetpp;
 
@@ -43,10 +46,15 @@ namespace veins {
 
 class VEINS_API PQV2VApp : public DemoBaseApplLayer {
 public:
+
+    static int vehicle_id_counter;
+
+    static const int ECDSA_FULL_SPDU_SIZE_BITS = 330 * 8;
+    static const int ECDSA_DIGEST_SPDU_SIZE_BITS = 200 * 8;
+
     void initialize(int stage) override;
     void finish() override;
-    static int vehicle_id_counter;
-    static const int ECDSA_FULL_SPDU_SIZE_BITS = 162 * 8;
+
 
 protected:
     void onBSM(DemoSafetyMessage* bsm) override;
@@ -59,9 +67,15 @@ protected:
     void handleSelfMsg(cMessage* msg) override;
     void handlePositionUpdate(cObject* obj) override;
 
+    void learn_certificate(Certificate* certificate);
+    bool is_known_certificate(Certificate* certificate);
+
     uint32_t beaconCount = 0;
     uint8_t vehicle_id;
     uint32_t transmissionCounter = 0;
+    Certificate pseudonym_certificate;
+    std::vector<Certificate> known_certificates;
+
 };
 
 } // namespace veins

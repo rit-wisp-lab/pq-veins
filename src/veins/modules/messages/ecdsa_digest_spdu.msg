@@ -14,11 +14,10 @@
 //
 
 import veins.modules.messages.BaseFrame1609_4;
-import veins.modules.security.Certificate;
 
 namespace veins;
 
-packet ECDSA_FULL_SPDU extends BaseFrame1609_4 {
+packet ECDSA_DIGEST_SPDU extends BaseFrame1609_4 {
     uint8_t vehicle_id;
-    Certificate certificate;
+	bool contains_certificate = false;
 }

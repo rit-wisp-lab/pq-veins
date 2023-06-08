@@ -11,14 +11,30 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-//
+// 
 
-import veins.modules.messages.BaseFrame1609_4;
-import veins.modules.security.Certificate;
+#include <veins/modules/security/Certificate.h>
 
-namespace veins;
+using namespace veins;
 
-packet ECDSA_FULL_SPDU extends BaseFrame1609_4 {
-    uint8_t vehicle_id;
-    Certificate certificate;
+Certificate::Certificate() {
+    // TODO Auto-generated constructor stub
+
 }
+
+Certificate::~Certificate() {
+    // TODO Auto-generated destructor stub
+}
+
+Certificate::Certificate(const Certificate &c) {
+    this->vehicle_id = c.vehicle_id;
+}
+
+uint8_t Certificate::getVehicle_id() {
+    return vehicle_id;
+}
+
+void Certificate::setVehicle_id(uint8_t vehicle_id) {
+    this->vehicle_id = vehicle_id;
+}
+
