@@ -37,7 +37,6 @@ void PQV2VApp::initialize(int stage)
 
         // Set vehicle ID to a unique number
         this->vehicle_id = this->vehicle_id_counter++;
-        this->pseudonym_certificate = Certificate(this->vehicle_id);
 
     }
     else if (stage == 1) {
@@ -105,7 +104,6 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
         spdu->setChannelNumber(static_cast<int>(Channel::cch));
         spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
         spdu->setUserPriority(beaconUserPriority);
-        spdu->setCertificate(Certificate(this->pseudonym_certificate));
     }
     else if (ECDSA_DIGEST_SPDU* spdu = dynamic_cast<ECDSA_DIGEST_SPDU*>(wsm)) {
         spdu->setVehicle_id(this->vehicle_id);
@@ -162,16 +160,16 @@ void PQV2VApp::handlePositionUpdate(cObject* obj)
     // member variables such as currentPosition and currentSpeed are updated in the parent class
 }
 
-void PQV2VApp::learn_certificate(Certificate* certificate) {
-    this->known_certificates.push_back(*certificate);
-}
-
-bool PQV2VApp::is_known_certificate(Certificate* certificate) {
-    auto idx = std::find_if(this->known_certificates.begin(),
-                            this->known_certificates.end(),
-                            [&certificate](Certificate& obj) {
-                            return obj.getVehicle_id() == certificate->getVehicle_id();
-                            });
-
-    return idx != this->known_certificates.end();
-}
+//void PQV2VApp::learn_certificate(Certificate* certificate) {
+//    this->known_certificates.push_back(*certificate);
+//}
+//
+//bool PQV2VApp::is_known_certificate(Certificate* certificate) {
+//    auto idx = std::find_if(this->known_certificates.begin(),
+//                            this->known_certificates.end(),
+//                            [&certificate](Certificate& obj) {
+//                            return obj.getVehicle_id() == certificate->getVehicle_id();
+//                            });
+//
+//    return idx != this->known_certificates.end();
+//}

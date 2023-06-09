@@ -28,7 +28,6 @@
 #include "veins/modules/application/ieee80211p/DemoBaseApplLayer.h"
 #include "veins/modules/messages/ecdsa_full_spdu_m.h"
 #include "veins/modules/messages/ecdsa_digest_spdu_m.h"
-#include "veins/modules/security/Certificate.h"
 
 using namespace omnetpp;
 
@@ -67,14 +66,10 @@ protected:
     void handleSelfMsg(cMessage* msg) override;
     void handlePositionUpdate(cObject* obj) override;
 
-    void learn_certificate(Certificate* certificate);
-    bool is_known_certificate(Certificate* certificate);
-
     uint32_t beaconCount = 0;
     uint8_t vehicle_id;
     uint32_t transmissionCounter = 0;
-    Certificate pseudonym_certificate;
-    std::vector<Certificate> known_certificates;
+    std::vector<uint16_t> known_certificates;
 
 };
 

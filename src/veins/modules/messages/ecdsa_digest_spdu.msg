@@ -19,5 +19,4 @@ namespace veins;
 
 packet ECDSA_DIGEST_SPDU extends BaseFrame1609_4 {
     uint8_t vehicle_id;
-	bool contains_certificate = false;
 }
