@@ -66,13 +66,41 @@ void PQV2VApp::onRealBSM(J2735_bsm* bsm)
     EV << "\n\tI have received a total of " << this->beaconCount << " BSMs";
 }
 
+void PQV2VApp::onECDSA_SPDU(ECDSA_SPDU* spdu) {
+    if(spdu->getContains_full_certificate()) {
+        if(!is_known_certificate(spdu->getVehicle_id())) {
+            EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << "is unknown, recording\n";
+            learn_certificate(spdu->getVehicle_id());
+        }
+        else
+            EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << "is already known, ignoring\n";
+    }
+    else {
+        if(!is_known_certificate(spdu->getVehicle_id())) {
+            EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << "is unknown, learning\n";
+            // Trigger
+        }
+        else
+            EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << "is already known, ignoring\n";
+    }
+}
+
 void PQV2VApp::handleLowerMsg(cMessage* msg)
 {
     BaseFrame1609_4* wsm = dynamic_cast<BaseFrame1609_4*>(msg);
     ASSERT(wsm);
-    if(J2735_bsm* bsm = dynamic_cast<J2735_bsm*>(wsm)) {
+//    if(ECDSA_FULL_SPDU* spdu = dynamic_cast<ECDSA_FULL_SPDU*>(wsm)) {
+//        receivedBSMs++;
+//        EV << "Received ECDSA_FULL_SPDU from " << std::to_string(spdu->getVehicle_id()) << "\n";
+//    }
+//    else if(ECDSA_DIGEST_SPDU* spdu = dynamic_cast<ECDSA_DIGEST_SPDU*>(wsm)) {
+//        receivedBSMs++;
+//        EV << "Received ECDSA_DIGEST_SPDU from " << std::to_string(spdu->getVehicle_id()) << "\n";
+//    }
+    if(ECDSA_SPDU* spdu = dynamic_cast<ECDSA_SPDU*>(msg)) {
         receivedBSMs++;
-        onRealBSM(bsm);
+        EV << "Received ECDSA_SPDU from vehicle " << std::to_string(spdu->getVehicle_id()) << "\n";
+        onECDSA_SPDU(spdu);
     }
     else {
         DemoBaseApplLayer::handleLowerMsg(msg);
@@ -91,27 +119,20 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
     wsm->setRecipientAddress(rcvId);
     wsm->setBitLength(headerLength);
 
-//    if (J2735_bsm* bsm = dynamic_cast<J2735_bsm*>(wsm)) {
-//        bsm->setVehicle_id(this->vehicle_id);
-//        bsm->setPsid(32);
-//        bsm->setChannelNumber(static_cast<int>(Channel::cch));
-//        bsm->addBitLength(beaconLengthBits);
-//        wsm->setUserPriority(beaconUserPriority);
-//    }
-    if (ECDSA_FULL_SPDU* spdu = dynamic_cast<ECDSA_FULL_SPDU*>(wsm)) {
-        spdu->setVehicle_id(this->vehicle_id);
-        spdu->setPsid(32);
-        spdu->setChannelNumber(static_cast<int>(Channel::cch));
-        spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
-        spdu->setUserPriority(beaconUserPriority);
-    }
-    else if (ECDSA_DIGEST_SPDU* spdu = dynamic_cast<ECDSA_DIGEST_SPDU*>(wsm)) {
-        spdu->setVehicle_id(this->vehicle_id);
-        spdu->setPsid(32);
-        spdu->setChannelNumber(static_cast<int>(Channel::cch));
-        spdu->addBitLength(ECDSA_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
-        spdu->setUserPriority(beaconUserPriority);
-    }
+    if (ECDSA_SPDU* spdu = dynamic_cast<ECDSA_SPDU*>(wsm)) {
+            spdu->setVehicle_id(this->vehicle_id);
+            spdu->setPsid(32);
+            spdu->setChannelNumber(static_cast<int>(Channel::cch));
+            if(this->transmissionCounter % 5 == 0) {
+                spdu->setContains_full_certificate(true);
+                spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
+            }
+            else {
+                spdu->setContains_full_certificate(false);
+                spdu->addBitLength(ECDSA_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
+            }
+            spdu->setUserPriority(beaconUserPriority);
+        }
     else {
         DemoBaseApplLayer::populateWSM(wsm);
     }
@@ -132,16 +153,19 @@ void PQV2VApp::handleSelfMsg(cMessage* msg)
     switch (msg->getKind()) {
 
     case SEND_BEACON_EVT: {
-        if(transmissionCounter % 5 == 0) {
-            ECDSA_FULL_SPDU* spdu = new ECDSA_FULL_SPDU();
-            populateWSM(spdu);
-            sendDown(spdu);
-        }
-        else {
-           ECDSA_DIGEST_SPDU* spdu = new ECDSA_DIGEST_SPDU();
-           populateWSM(spdu);
-           sendDown(spdu);
-        }
+//        if(transmissionCounter % 5 == 0) {
+//            ECDSA_FULL_SPDU* spdu = new ECDSA_FULL_SPDU();
+//            populateWSM(spdu);
+//            sendDown(spdu);
+//        }
+//        else {
+//           ECDSA_DIGEST_SPDU* spdu = new ECDSA_DIGEST_SPDU();
+//           populateWSM(spdu);
+//           sendDown(spdu);
+//        }
+        ECDSA_SPDU* spdu = new ECDSA_SPDU();
+        populateWSM(spdu);
+        sendDown(spdu);
         transmissionCounter++;
         scheduleAt(simTime() + beaconInterval, sendBeaconEvt);
         break;
@@ -159,6 +183,14 @@ void PQV2VApp::handlePositionUpdate(cObject* obj)
     // the vehicle has moved. Code that reacts to new positions goes here.
     // member variables such as currentPosition and currentSpeed are updated in the parent class
 }
+
+void PQV2VApp::learn_certificate(uint8_t vehicle_id) {
+    known_certificates.push_back(vehicle_id);
+}
+bool PQV2VApp::is_known_certificate(uint8_t vehicle_id) {
+    return std::find(known_certificates.begin(), known_certificates.end(), vehicle_id) != known_certificates.end();
+}
+
 
 //void PQV2VApp::learn_certificate(Certificate* certificate) {
 //    this->known_certificates.push_back(*certificate);

@@ -24,10 +24,12 @@
 
 #include "veins/veins.h"
 #include <vector>
+#include <algorithm>
 
 #include "veins/modules/application/ieee80211p/DemoBaseApplLayer.h"
 #include "veins/modules/messages/ecdsa_full_spdu_m.h"
 #include "veins/modules/messages/ecdsa_digest_spdu_m.h"
+#include "veins/modules/messages/ecdsa_spdu_m.h"
 
 using namespace omnetpp;
 
@@ -62,14 +64,19 @@ protected:
     void onRealBSM(J2735_bsm* bsm) override;
     void populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId = LAddress::L2BROADCAST(), int serial = 0) override;
 
+    void onECDSA_SPDU(ECDSA_SPDU* spdu);
+
     void handleLowerMsg(cMessage* msg) override;
     void handleSelfMsg(cMessage* msg) override;
     void handlePositionUpdate(cObject* obj) override;
 
+    void learn_certificate(uint8_t vehicle_id);
+    bool is_known_certificate(uint8_t vehicle_id);
+
     uint32_t beaconCount = 0;
     uint8_t vehicle_id;
     uint32_t transmissionCounter = 0;
-    std::vector<uint16_t> known_certificates;
+    std::vector<uint8_t> known_certificates;
 
 };
 
