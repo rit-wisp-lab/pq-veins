@@ -22,12 +22,12 @@
 class P2PCDLearningRequest {
 public:
     P2PCDLearningRequest();
+    P2PCDLearningRequest(std::vector<uint8_t> &certificateList);
     virtual ~P2PCDLearningRequest();
     std::vector<uint8_t> certIDs;
 
     std::vector<uint8_t> get_certIDs();
     void set_certIDs(std::vector<uint8_t> &certIDs);
-
 };
 
 #endif /* SRC_VEINS_MODULES_MESSAGES_P2PCDLEARNINGREQUEST_H_ */

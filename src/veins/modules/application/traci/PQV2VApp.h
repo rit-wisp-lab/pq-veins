@@ -30,6 +30,7 @@
 #include "veins/modules/messages/ecdsa_full_spdu_m.h"
 #include "veins/modules/messages/ecdsa_digest_spdu_m.h"
 #include "veins/modules/messages/ecdsa_spdu_m.h"
+#include "veins/modules/messages/P2PCDLearningRequest_m.h"
 
 using namespace omnetpp;
 
@@ -77,6 +78,12 @@ protected:
     uint8_t vehicle_id;
     uint32_t transmissionCounter = 0;
     std::vector<uint8_t> known_certificates;
+    std::vector<uint8_t> certificatesToLearn;
+    std::vector<uint8_t> certificatesToShare;
+    bool sendLearningRequest = false;
+    bool learningResponseQueued = false;
+
+    cMessage* sendLearningResponseEvt;
 
 };
 

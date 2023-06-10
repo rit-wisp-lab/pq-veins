@@ -25,6 +25,10 @@ P2PCDLearningRequest::~P2PCDLearningRequest() {
     // TODO Auto-generated destructor stub
 }
 
+P2PCDLearningRequest::P2PCDLearningRequest(std::vector<uint8_t> &certificateList) {
+    this->certIDs = std::vector<uint8_t>(certificateList);
+}
+
 std::vector<uint8_t> P2PCDLearningRequest::get_certIDs() {
     return std::vector<uint8_t>(this->certIDs);
 }

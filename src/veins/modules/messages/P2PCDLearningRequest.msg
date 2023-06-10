@@ -13,11 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-cplusplus {{ 
-    #include "veins/modules/messages/P2PCDLearningRequest.h" 
-	#include <vector>
-	#include <stdint.h>
-}}
+cplusplus {{ #include "veins/modules/messages/P2PCDLearningRequest.h" }}
 
 namespace veins;
 

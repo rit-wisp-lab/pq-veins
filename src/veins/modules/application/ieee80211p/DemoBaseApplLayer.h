@@ -67,7 +67,8 @@ public:
 
     enum DemoApplMessageKinds {
         SEND_BEACON_EVT,
-        SEND_WSA_EVT
+        SEND_WSA_EVT,
+        SEND_LEARNING_RESPONSE_EVT
     };
 
 protected:

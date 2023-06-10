@@ -11,16 +11,23 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-//
+// 
 
-import veins.modules.messages.BaseFrame1609_4;
-import veins.modules.messages.P2PCDLearningRequest;
+#ifndef SRC_VEINS_MODULES_MESSAGES_P2PCDLEARNINGRESPONSE_H_
+#define SRC_VEINS_MODULES_MESSAGES_P2PCDLEARNINGRESPONSE_H_
 
-namespace veins;
+#include <vector>
+#include <stdint.h>
 
-packet ECDSA_SPDU extends BaseFrame1609_4 {
-    uint8_t vehicle_id;
-    bool contains_full_certificate;
-    bool contains_learning_request;
-    P2PCDLearningRequest learningRequest;
-}
+class P2PCDLearningResponse {
+public:
+    P2PCDLearningResponse();
+    P2PCDLearningResponse(std::vector<uint8_t> &certIDs);
+    virtual ~P2PCDLearningResponse();
+
+    std::vector<uint8_t> certIDs;
+    std::vector<uint8_t> get_certIDs();
+    void set_certIDs(std::vector<uint8_t> &certIDs);
+};
+
+#endif /* SRC_VEINS_MODULES_MESSAGES_P2PCDLEARNINGRESPONSE_H_ */

@@ -14,13 +14,10 @@
 //
 
 import veins.modules.messages.BaseFrame1609_4;
-import veins.modules.messages.P2PCDLearningRequest;
+import veins.modules.messages.P2PCDLearningResponse;
 
 namespace veins;
 
-packet ECDSA_SPDU extends BaseFrame1609_4 {
-    uint8_t vehicle_id;
-    bool contains_full_certificate;
-    bool contains_learning_request;
-    P2PCDLearningRequest learningRequest;
+packet LEARNING_RESPONSE_SPDU extends BaseFrame1609_4 {
+    P2PCDLearningResponse learningResponse;
 }
