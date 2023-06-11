@@ -95,9 +95,14 @@ void PQV2VApp::onECDSA_SPDU(ECDSA_SPDU* spdu) {
         for(int i = 0; i < spdu->getLearningRequest().get_certIDs().size(); i++) {
             this->certificatesToShare.push_back(spdu->getLearningRequest().get_certIDs().at(i));
         }
-        scheduleAt(simTime() + (std::rand() % 250), sendLearningResponseEvt);
-    }
 
+        if(!sendLearningResponseEvt->isScheduled()) {
+            EV << "Learning response being scheduled now\n";
+            scheduleAt(simTime() + ((std::rand() % 250) / 1000), sendLearningResponseEvt);
+        }
+        else
+            EV << "Learning response triggered but already scheduled\n";
+    }
 }
 
 void PQV2VApp::handleLowerMsg(cMessage* msg)
@@ -135,28 +140,33 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
     wsm->setBitLength(headerLength);
 
     if (ECDSA_SPDU* spdu = dynamic_cast<ECDSA_SPDU*>(wsm)) {
-            spdu->setVehicle_id(this->vehicle_id);
-            spdu->setPsid(32);
-            spdu->setChannelNumber(static_cast<int>(Channel::cch));
-            if(this->transmissionCounter % 5 == 0) {
-                spdu->setContains_full_certificate(true);
-                spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
-            }
-            else {
-                spdu->setContains_full_certificate(false);
-                spdu->addBitLength(ECDSA_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
-            }
-            spdu->setUserPriority(beaconUserPriority);
-
-            // P2PCD requests
-            if(this->sendLearningRequest) {
-                spdu->setLearningRequest(P2PCDLearningRequest(this->certificatesToLearn));
-                spdu->setContains_learning_request(true);
-                spdu->addBitLength(this->certificatesToLearn.size() * 24); // each p2pcdLearningRequest under 1609.2-2022 is HashedDigest3 (24 bits)
-                this->certificatesToLearn.clear();
-                this->sendLearningRequest = false;
-            }
+        spdu->setVehicle_id(this->vehicle_id);
+        spdu->setPsid(32);
+        spdu->setChannelNumber(static_cast<int>(Channel::cch));
+        if(this->transmissionCounter % 5 == 0) {
+            spdu->setContains_full_certificate(true);
+            spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
         }
+        else {
+            spdu->setContains_full_certificate(false);
+            spdu->addBitLength(ECDSA_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
+        }
+        spdu->setUserPriority(beaconUserPriority);
+
+        // P2PCD requests
+        if(this->sendLearningRequest) {
+            spdu->setLearningRequest(P2PCDLearningRequest(this->certificatesToLearn));
+            spdu->setContains_learning_request(true);
+            spdu->addBitLength(this->certificatesToLearn.size() * 24); // each p2pcdLearningRequest under 1609.2-2022 is HashedDigest3 (24 bits)
+            this->certificatesToLearn.clear();
+            this->sendLearningRequest = false;
+        }
+    }
+    else if(LEARNING_RESPONSE_SPDU* spdu = dynamic_cast<LEARNING_RESPONSE_SPDU*>(wsm)) {
+        spdu->setPsid(32);
+        spdu->setChannelNumber(static_cast<int>(Channel::cch));
+        spdu->addBitLength((spdu->getLearningResponse().get_certIDs().size() * 24) - spdu->getBitLength());
+    }
     else {
         DemoBaseApplLayer::populateWSM(wsm);
     }
@@ -182,6 +192,15 @@ void PQV2VApp::handleSelfMsg(cMessage* msg)
         sendDown(spdu);
         transmissionCounter++;
         scheduleAt(simTime() + beaconInterval, sendBeaconEvt);
+        break;
+    }
+    case SEND_LEARNING_RESPONSE_EVT: {
+        EV << "Learning response triggered - sending now!\n";
+        LEARNING_RESPONSE_SPDU* spdu = new LEARNING_RESPONSE_SPDU();
+        spdu->setLearningResponse(P2PCDLearningResponse(this->certificatesToShare));
+        this->certificatesToShare.clear();
+        populateWSM(spdu);
+        sendDown(spdu);
         break;
     }
     default: {

@@ -31,6 +31,7 @@
 #include "veins/modules/messages/ecdsa_digest_spdu_m.h"
 #include "veins/modules/messages/ecdsa_spdu_m.h"
 #include "veins/modules/messages/P2PCDLearningRequest_m.h"
+#include "veins/modules/messages/LearningResponseSPDU_m.h"
 
 using namespace omnetpp;
 

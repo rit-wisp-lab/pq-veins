@@ -22,11 +22,11 @@
 class P2PCDLearningResponse {
 public:
     P2PCDLearningResponse();
-    P2PCDLearningResponse(std::vector<uint8_t> &certIDs);
+    P2PCDLearningResponse(std::vector<uint8_t> certIDs);
     virtual ~P2PCDLearningResponse();
 
     std::vector<uint8_t> certIDs;
-    std::vector<uint8_t> get_certIDs();
+    std::vector<uint8_t> get_certIDs() const;
     void set_certIDs(std::vector<uint8_t> &certIDs);
 };
 

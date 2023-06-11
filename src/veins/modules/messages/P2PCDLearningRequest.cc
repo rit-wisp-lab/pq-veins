@@ -29,11 +29,11 @@ P2PCDLearningRequest::P2PCDLearningRequest(std::vector<uint8_t> &certificateList
     this->certIDs = std::vector<uint8_t>(certificateList);
 }
 
-std::vector<uint8_t> P2PCDLearningRequest::get_certIDs() {
+std::vector<uint8_t> P2PCDLearningRequest::get_certIDs() const {
     return std::vector<uint8_t>(this->certIDs);
 }
 
-void P2PCDLearningRequest::set_certIDs(std::vector<uint8_t> &certIDs) {
+void P2PCDLearningRequest::set_certIDs(std::vector<uint8_t> certIDs) {
     this->certIDs = std::vector<uint8_t>(certIDs);
 }
 

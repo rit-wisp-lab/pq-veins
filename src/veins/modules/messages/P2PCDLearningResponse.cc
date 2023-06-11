@@ -24,11 +24,11 @@ P2PCDLearningResponse::~P2PCDLearningResponse() {
     // TODO Auto-generated destructor stub
 }
 
-P2PCDLearningResponse::P2PCDLearningResponse(std::vector<uint8_t> &certIDs) {
+P2PCDLearningResponse::P2PCDLearningResponse(std::vector<uint8_t> certIDs) {
     this->certIDs = std::vector<uint8_t>(certIDs);
 }
 
-std::vector<uint8_t> P2PCDLearningResponse::get_certIDs() {
+std::vector<uint8_t> P2PCDLearningResponse::get_certIDs() const {
     return std::vector<uint8_t>(this->certIDs);
 }
 
