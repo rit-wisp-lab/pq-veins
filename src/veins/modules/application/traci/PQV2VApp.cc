@@ -48,60 +48,114 @@ void PQV2VApp::initialize(int stage)
 
 void PQV2VApp::finish()
 {
+    recordScalar("learnRequestsReceived", learnRequestsReceived);
+    recordScalar("learnRequestsSent", learnRequestsSent);
+    recordScalar("learnResponsesReceived", learnResponsesReceived);
+    recordScalar("learnResponsesSent", learnResponsesSent);
     DemoBaseApplLayer::finish();
     // statistics recording goes here
+
 }
 
 void PQV2VApp::onBSM(DemoSafetyMessage* bsm)
 {
     // Your application has received a beacon message from another car or RSU
     // code for handling the message goes here
-    EV << "Received BSM\n";
+//    printIDText(); EV << "Received BSM\n";
 }
 
 void PQV2VApp::onRealBSM(J2735_bsm* bsm)
 {
-    EV << "Received J2735 BSM:";
-    EV << "\n\tVehicle ID: " << bsm->getVehicle_id();
-    EV << "\n\tPSID: " << bsm->getPsid() << "\n";
-    this->beaconCount++;
-    EV << "\n\tI have received a total of " << this->beaconCount << " BSMs";
+//    EV << "Received J2735 BSM:";
+//    EV << "\n\tVehicle ID: " << bsm->getVehicle_id();
+//    EV << "\n\tPSID: " << bsm->getPsid() << "\n";
+//    this->beaconCount++;
+//    EV << "\n\tI have received a total of " << this->beaconCount << " BSMs";
 }
 
 void PQV2VApp::onECDSA_SPDU(ECDSA_SPDU* spdu) {
-
+    printIDText(); EV << "Processing SPDU from vehicle " << std::to_string(spdu->getVehicle_id()) << "\n";
+    displayKnownCertificates();
     // Deal with certificate
     if(spdu->getContains_full_certificate()) {
         if(!is_known_certificate(spdu->getVehicle_id())) {
-            EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << " is unknown, recording\n";
+            printIDText(); EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << " is unknown, recording\n";
             learn_certificate(spdu->getVehicle_id());
+            displayKnownCertificates();
         }
-        else
-            EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << " is already known, ignoring\n";
+        else {}
+//            printIDText(); EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << " is already known, ignoring\n";
+//        }
     }
     else {
         if(!is_known_certificate(spdu->getVehicle_id())) {
-            EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is unknown, learning\n";
+            printIDText(); EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is unknown, triggering learning request\n";
             this->sendLearningRequest = true;
             this->certificatesToLearn.push_back(spdu->getVehicle_id());
+            displayCertificatesToLearn();
         }
-        else
-            EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is already known, ignoring\n";
+        else {}
+//            printIDText(); EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is already known, ignoring\n";
+//        }
     }
 
     // Handle learning request (if present)
     if(spdu->getContains_learning_request()) {
-//        std::vector<uint8_t> certIDs = std::vector<uint8_t>((spdu->getLearningRequest()).get_certIDs());
-        for(int i = 0; i < spdu->getLearningRequest().get_certIDs().size(); i++) {
-            this->certificatesToShare.push_back(spdu->getLearningRequest().get_certIDs().at(i));
+        learnRequestsReceived++;
+        printIDText(); EV << "Received learning request for certificates: ";
+        for (auto i : spdu->getLearningRequest().get_certIDs())
+            EV << std::to_string(i) << " ";
+        EV << "\n";
+
+        for(auto i : spdu->getLearningRequest().get_certIDs()) {
+            if(std::find(known_certificates.begin(), known_certificates.end(), i) != known_certificates.end() &&
+                    std::find(certificatesToShare.begin(), certificatesToShare.end(), i) == certificatesToShare.end())
+                this->certificatesToShare.push_back(i);
         }
 
         if(!sendLearningResponseEvt->isScheduled()) {
-            EV << "Learning response being scheduled now\n";
-            scheduleAt(simTime() + ((std::rand() % 250) / 1000), sendLearningResponseEvt);
+            if(!certificatesToShare.empty()) {
+                printIDText(); EV << "Learning response being scheduled now\n";
+    //            scheduleAt(simTime() + ((std::rand() % 250) / 1000), sendLearningResponseEvt);
+                scheduleAt(simTime() + 0.2, sendLearningResponseEvt);
+                for(uint8_t i : this->certificatesToShare) {
+                    this->learningResponseTracker[i] = 0;
+                }
+            }
+            else {
+                displayKnownCertificates();
+                printIDText(); EV << "I don't know any of the requested certificates, no response will be scheduled.\n";
+            }
         }
-        else
-            EV << "Learning response triggered but already scheduled\n";
+        else {
+            printIDText(); EV << "Learning response triggered but already scheduled\n";
+        }
+    }
+}
+
+void PQV2VApp::onLearningResponse(LEARNING_RESPONSE_SPDU* spdu) {
+    std::vector<uint8_t> certIDs(spdu->getLearningResponse().get_certIDs());
+
+    printIDText(); EV << "Received learning response with certificates for ";
+    for(auto i : certIDs) {
+        EV << std::to_string(i) << " ";
+    }
+    EV << "\n";
+
+    for(auto i : certIDs) {
+        if(std::find(this->known_certificates.begin(), this->known_certificates.end(), i) == this->known_certificates.end()) {
+            printIDText(); EV << "Learned certificate for vehicle " << std::to_string(i) << "\n";
+            this->known_certificates.push_back(i);
+        }
+        if(sendLearningResponseEvt->isScheduled()) {
+            printIDText(); EV << "Observed and recorded learning response for certificate " << std::to_string(i) << "\n";
+            if(this->learningResponseTracker.find(i) != this->learningResponseTracker.end()) {
+                this->learningResponseTracker[i] = 1;
+            }
+            else {
+                this->learningResponseTracker[i] = this->learningResponseTracker[i] + 1;
+            }
+        }
     }
 }
 
@@ -109,18 +163,15 @@ void PQV2VApp::handleLowerMsg(cMessage* msg)
 {
     BaseFrame1609_4* wsm = dynamic_cast<BaseFrame1609_4*>(msg);
     ASSERT(wsm);
-//    if(ECDSA_FULL_SPDU* spdu = dynamic_cast<ECDSA_FULL_SPDU*>(wsm)) {
-//        receivedBSMs++;
-//        EV << "Received ECDSA_FULL_SPDU from " << std::to_string(spdu->getVehicle_id()) << "\n";
-//    }
-//    else if(ECDSA_DIGEST_SPDU* spdu = dynamic_cast<ECDSA_DIGEST_SPDU*>(wsm)) {
-//        receivedBSMs++;
-//        EV << "Received ECDSA_DIGEST_SPDU from " << std::to_string(spdu->getVehicle_id()) << "\n";
-//    }
+
     if(ECDSA_SPDU* spdu = dynamic_cast<ECDSA_SPDU*>(msg)) {
         receivedBSMs++;
-        EV << "Received ECDSA_SPDU from vehicle " << std::to_string(spdu->getVehicle_id()) << "\n";
+        printIDText(); EV << "Received ECDSA_SPDU from vehicle " << std::to_string(spdu->getVehicle_id()) << "\n";
         onECDSA_SPDU(spdu);
+    }
+    else if(LEARNING_RESPONSE_SPDU* spdu = dynamic_cast<LEARNING_RESPONSE_SPDU*>(msg)) {
+        learnResponsesReceived++;
+        onLearningResponse(spdu);
     }
     else {
         DemoBaseApplLayer::handleLowerMsg(msg);
@@ -155,7 +206,14 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
 
         // P2PCD requests
         if(this->sendLearningRequest) {
+            learnRequestsSent++;
             spdu->setLearningRequest(P2PCDLearningRequest(this->certificatesToLearn));
+
+            printIDText(); EV << "Sending learning request for vehicles ";
+            for(auto i : spdu->getLearningRequest().get_certIDs())
+                EV << std::to_string(i) << " ";
+            EV << "\n";
+
             spdu->setContains_learning_request(true);
             spdu->addBitLength(this->certificatesToLearn.size() * 24); // each p2pcdLearningRequest under 1609.2-2022 is HashedDigest3 (24 bits)
             this->certificatesToLearn.clear();
@@ -165,7 +223,7 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
     else if(LEARNING_RESPONSE_SPDU* spdu = dynamic_cast<LEARNING_RESPONSE_SPDU*>(wsm)) {
         spdu->setPsid(32);
         spdu->setChannelNumber(static_cast<int>(Channel::cch));
-        spdu->addBitLength((spdu->getLearningResponse().get_certIDs().size() * 24) - spdu->getBitLength());
+        spdu->addBitLength((spdu->getLearningResponse().get_certIDs().size() * 162 * 8) - spdu->getBitLength());
     }
     else {
         DemoBaseApplLayer::populateWSM(wsm);
@@ -176,6 +234,26 @@ void PQV2VApp::onWSA(DemoServiceAdvertisment* wsa)
 {
     // Your application has received a service advertisement from another car or RSU
     // code for handling the message goes here, see TraciDemo11p.cc for examples
+}
+
+void PQV2VApp::printIDText() {
+    EV << "(V" << std::to_string(this->vehicle_id) << ") " << "";
+}
+
+void PQV2VApp::displayKnownCertificates() {
+    printIDText(); EV << "Known certificates: ";
+    for(auto i: this->known_certificates) {
+        EV << std::to_string(i) << " ";
+    }
+    EV << "\n";
+}
+
+void PQV2VApp::displayCertificatesToLearn() {
+    printIDText(); EV << "Certificates to learn: ";
+    for(auto i: this->certificatesToLearn) {
+        EV << std::to_string(i) << " ";
+    }
+    EV << "\n";
 }
 
 void PQV2VApp::handleSelfMsg(cMessage* msg)
@@ -195,12 +273,40 @@ void PQV2VApp::handleSelfMsg(cMessage* msg)
         break;
     }
     case SEND_LEARNING_RESPONSE_EVT: {
-        EV << "Learning response triggered - sending now!\n";
+
+        printIDText(); EV << "Intending to share certificates for vehicles ";
+        for(auto i : certificatesToShare)
+            EV << std::to_string(i) << " ";
+        EV << "\n";
+
+        printIDText(); EV << "So far have heard:\n";
+        for(auto i : certificatesToShare) {
+            if(learningResponseTracker.find(i) != learningResponseTracker.end()) {
+                printIDText(); EV << "\t" << std::to_string(learningResponseTracker[i]) << " responses for cert of vehicle " << std::to_string(i) << "\n";
+                if(learningResponseTracker[i] > 3) {
+                    certificatesToShare.erase(std::find(certificatesToShare.begin(), certificatesToShare.end(), i));
+                }
+            }
+        }
+
+        printIDText(); EV << "Actually sending certificates for vehicles ";
+        for(auto i : certificatesToShare)
+            EV << std::to_string(i) << " ";
+        EV << "\n";
+
+        printIDText(); EV << "Learning response sent!\n";
+
         LEARNING_RESPONSE_SPDU* spdu = new LEARNING_RESPONSE_SPDU();
         spdu->setLearningResponse(P2PCDLearningResponse(this->certificatesToShare));
-        this->certificatesToShare.clear();
+
         populateWSM(spdu);
         sendDown(spdu);
+
+        this->certificatesToShare.clear();
+        this->learningResponseTracker.clear();
+
+        learnResponsesSent++;
+
         break;
     }
     default: {

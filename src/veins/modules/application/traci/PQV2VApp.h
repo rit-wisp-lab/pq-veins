@@ -74,6 +74,7 @@ protected:
 
     void learn_certificate(uint8_t vehicle_id);
     bool is_known_certificate(uint8_t vehicle_id);
+    void onLearningResponse(LEARNING_RESPONSE_SPDU* spdu);
 
     uint32_t beaconCount = 0;
     uint8_t vehicle_id;
@@ -84,7 +85,18 @@ protected:
     bool sendLearningRequest = false;
     bool learningResponseQueued = false;
 
+    uint32_t learnRequestsReceived = 0;
+    uint32_t learnResponsesReceived = 0;
+    uint32_t learnRequestsSent = 0;
+    uint32_t learnResponsesSent = 0;
+
+    std::map<uint8_t, int> learningResponseTracker;
+
     cMessage* sendLearningResponseEvt;
+
+    void printIDText();
+    void displayKnownCertificates();
+    void displayCertificatesToLearn();
 
 };
 
