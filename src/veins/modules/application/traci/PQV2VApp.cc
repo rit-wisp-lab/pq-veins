@@ -115,9 +115,16 @@ void PQV2VApp::onECDSA_SPDU(ECDSA_SPDU* spdu) {
 
         if(!sendLearningResponseEvt->isScheduled()) {
             if(!certificatesToShare.empty()) {
-                printIDText(); EV << "Learning response being scheduled now\n";
-    //            scheduleAt(simTime() + ((std::rand() % 250) / 1000), sendLearningResponseEvt);
-                scheduleAt(simTime() + 0.2, sendLearningResponseEvt);
+                printIDText(); EV << "Learning response being scheduled now for vehicles";
+                for(auto i: certificatesToShare) {
+                    EV<< std::to_string(i) << " ";
+                }
+                EV << "\n";
+
+                float delay = (std::rand() % 250) / (float)1000;
+                printIDText(); EV << "========> Will transmit learning request in " << std::to_string(delay) << "\n";
+                scheduleAt(simTime() + delay, sendLearningResponseEvt);
+//                scheduleAt(simTime() + 0.2, sendLearningResponseEvt);
                 for(uint8_t i : this->certificatesToShare) {
                     this->learningResponseTracker[i] = 0;
                 }
