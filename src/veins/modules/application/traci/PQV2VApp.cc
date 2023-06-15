@@ -201,7 +201,7 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
         spdu->setVehicle_id(this->vehicle_id);
         spdu->setPsid(32);
         spdu->setChannelNumber(static_cast<int>(Channel::cch));
-        if(this->transmissionCounter % 5 == 0) {
+        if(this->transmissionCounter % 20 == 0) {
             spdu->setContains_full_certificate(true);
             spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
         }
