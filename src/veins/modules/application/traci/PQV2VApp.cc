@@ -35,6 +35,13 @@ void PQV2VApp::initialize(int stage)
         // Initializing members and pointers of your application goes here
         EV << "Initializing " << par("appName").stringValue() << std::endl;
 
+        pq = par("pq").boolValue();
+//        EV << "Initial certInterval " << std::to_string(this->certInterval) << "\n";
+//        EV << "certInterval from file is " << par("certInterval").intValue() << "\n";
+        setCertInterval(par("certInterval").intValue());
+        this->useLearnRequests = par("useLearnRequests").boolValue();
+        EV << "I " << (this->useLearnRequests ? "will" : "will not") << " use learning requests\n";
+//        EV << "Loaded certInterval " << std::to_string(this->certInterval) << "\n";
         // Set vehicle ID to a unique number
         this->vehicle_id = this->vehicle_id_counter++;
 
@@ -52,6 +59,11 @@ void PQV2VApp::finish()
     recordScalar("learnRequestsSent", learnRequestsSent);
     recordScalar("learnResponsesReceived", learnResponsesReceived);
     recordScalar("learnResponsesSent", learnResponsesSent);
+    recordScalar("redundantCertificatesReceived", redundantCertCounter);
+    recordScalar("totalCertsReceived", totalCertsReceived);
+    recordScalar("certInterval", certInterval);
+    recordScalar("useLearnRequests", useLearnRequests);
+
     DemoBaseApplLayer::finish();
     // statistics recording goes here
 
@@ -78,29 +90,34 @@ void PQV2VApp::onECDSA_SPDU(ECDSA_SPDU* spdu) {
     displayKnownCertificates();
     // Deal with certificate
     if(spdu->getContains_full_certificate()) {
+        totalCertsReceived++;
         if(!is_known_certificate(spdu->getVehicle_id())) {
             printIDText(); EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << " is unknown, recording\n";
             learn_certificate(spdu->getVehicle_id());
             displayKnownCertificates();
         }
-        else {}
+        else {
+            redundantCertCounter++;
+        }
 //            printIDText(); EV << "Certificate for vehicle " << std::to_string(spdu->getVehicle_id()) << " is already known, ignoring\n";
 //        }
     }
     else {
-        if(!is_known_certificate(spdu->getVehicle_id())) {
-            printIDText(); EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is unknown, triggering learning request\n";
-            this->sendLearningRequest = true;
-            this->certificatesToLearn.push_back(spdu->getVehicle_id());
-            displayCertificatesToLearn();
+        if(this->useLearnRequests) {
+            if(!is_known_certificate(spdu->getVehicle_id())) {
+                printIDText(); EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is unknown, triggering learning request\n";
+                this->sendLearningRequest = true;
+                this->certificatesToLearn.push_back(spdu->getVehicle_id());
+                displayCertificatesToLearn();
+            }
+            else {}
+    //            printIDText(); EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is already known, ignoring\n";
+    //        }
         }
-        else {}
-//            printIDText(); EV << "Digest for vehicle " << std::to_string(spdu->getVehicle_id()) << " is already known, ignoring\n";
-//        }
     }
 
     // Handle learning request (if present)
-    if(spdu->getContains_learning_request()) {
+    if(this->useLearnRequests && spdu->getContains_learning_request()) {
         learnRequestsReceived++;
         printIDText(); EV << "Received learning request for certificates: ";
         for (auto i : spdu->getLearningRequest().get_certIDs())
@@ -171,6 +188,8 @@ void PQV2VApp::handleLowerMsg(cMessage* msg)
     BaseFrame1609_4* wsm = dynamic_cast<BaseFrame1609_4*>(msg);
     ASSERT(wsm);
 
+
+
     if(ECDSA_SPDU* spdu = dynamic_cast<ECDSA_SPDU*>(msg)) {
         receivedBSMs++;
         printIDText(); EV << "Received ECDSA_SPDU from vehicle " << std::to_string(spdu->getVehicle_id()) << "\n";
@@ -201,13 +220,24 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
         spdu->setVehicle_id(this->vehicle_id);
         spdu->setPsid(32);
         spdu->setChannelNumber(static_cast<int>(Channel::cch));
-        if(this->transmissionCounter % 20 == 0) {
+        this->printIDText(); EV << "My certInterval is " << std::to_string(this->certInterval) << "\n";
+        if(this->transmissionCounter % this->certInterval == 0) {
             spdu->setContains_full_certificate(true);
-            spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
+            if(this->pq) {
+                spdu->addBitLength(FALCON_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
+            }
+            else {
+                spdu->addBitLength(ECDSA_FULL_SPDU_SIZE_BITS - spdu->getBitLength());
+            }
         }
         else {
             spdu->setContains_full_certificate(false);
-            spdu->addBitLength(ECDSA_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
+            if(this->pq) {
+                spdu->addBitLength(FALCON_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
+            }
+            else {
+                spdu->addBitLength(ECDSA_DIGEST_SPDU_SIZE_BITS - spdu->getBitLength());
+            }
         }
         spdu->setUserPriority(beaconUserPriority);
 
@@ -229,8 +259,13 @@ void PQV2VApp::populateWSM(BaseFrame1609_4* wsm, LAddress::L2Type rcvId, int ser
     }
     else if(LEARNING_RESPONSE_SPDU* spdu = dynamic_cast<LEARNING_RESPONSE_SPDU*>(wsm)) {
         spdu->setPsid(32);
-        spdu->setChannelNumber(static_cast<int>(Channel::cch));
-        spdu->addBitLength((spdu->getLearningResponse().get_certIDs().size() * 162 * 8) - spdu->getBitLength());
+        spdu->setChannelNumber(static_cast<int>(Channel::cch)); // 858
+        if(this->pq) {
+            spdu->addBitLength((spdu->getLearningResponse().get_certIDs().size() * 858 * 8) - spdu->getBitLength());
+        }
+        else {
+            spdu->addBitLength((spdu->getLearningResponse().get_certIDs().size() * 162 * 8) - spdu->getBitLength());
+        }
     }
     else {
         DemoBaseApplLayer::populateWSM(wsm);
@@ -337,6 +372,13 @@ bool PQV2VApp::is_known_certificate(uint8_t vehicle_id) {
     return std::find(known_certificates.begin(), known_certificates.end(), vehicle_id) != known_certificates.end();
 }
 
+void PQV2VApp::setCertInterval(uint16_t _certInterval) {
+    this->certInterval = _certInterval;
+}
+
+uint16_t PQV2VApp::getCertInterval() {
+    return this->certInterval;
+}
 
 //void PQV2VApp::learn_certificate(Certificate* certificate) {
 //    this->known_certificates.push_back(*certificate);

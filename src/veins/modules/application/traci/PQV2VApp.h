@@ -54,6 +54,8 @@ public:
 
     static const int ECDSA_FULL_SPDU_SIZE_BITS = 330 * 8;
     static const int ECDSA_DIGEST_SPDU_SIZE_BITS = 200 * 8;
+    static const int FALCON_FULL_SPDU_SIZE_BITS = 1026 * 8;
+    static const int FALCON_DIGEST_SPDU_SIZE_BITS = 858 * 8;
 
     void initialize(int stage) override;
     void finish() override;
@@ -85,10 +87,20 @@ protected:
     bool sendLearningRequest = false;
     bool learningResponseQueued = false;
 
+    bool pq = false;
+    bool useLearnRequests = false;
+
     uint32_t learnRequestsReceived = 0;
     uint32_t learnResponsesReceived = 0;
     uint32_t learnRequestsSent = 0;
     uint32_t learnResponsesSent = 0;
+
+    uint32_t redundantCertCounter = 0;
+    uint32_t totalCertsReceived = 0;
+
+    uint16_t certInterval = 5;
+    void setCertInterval(uint16_t _certInterval);
+    uint16_t getCertInterval();
 
     std::map<uint8_t, int> learningResponseTracker;
 
