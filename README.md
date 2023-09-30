@@ -25,7 +25,7 @@ and publications.
 PQ-VEINS is based on Instant VEINS, a virtual machine-based release of the VEINS 
 simulator.
 While PQ-VEINS can be integrated with any existing VEINS installation, we recommend
-using our pre-configured PQ-VEINS VM, which is available at [url](urlhere).
+using our pre-configured PQ-VEINS VM, which is available [here](https://bit.ly/3PWTHNN).
 
 A more complete guide to installing PQ-VEINS in an existing VEINS environment 
 is forthcoming. 
