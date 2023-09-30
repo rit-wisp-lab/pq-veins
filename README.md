@@ -35,7 +35,8 @@ is forthcoming.
 In order to support both classical and post-quantum V2V security, which are not modeled 
 in the basic VEINS tool, a number of additions and extensions have been made to VEINS.
 For example, new V2V messages are defined for digitally signed SPDUs under
-`pq-veins/src/veins/modules/messages`. 
+
+    pq-veins/src/veins/modules/messages/
 
 These messages (and other additions) are defined within the source code of VEINS to
 allow for easy integration into customized scenarios and applications. We include
@@ -52,7 +53,36 @@ if the selected algorithm was used for digitally signing messages and certificat
 
 ## Running PQ-VEINS Scenarios
 
-./run -u Cmdenv -c V2V-Falcon-BPSK12-WITHP2PCD-500MS
+A variety of pre-configured demonstration scenarios can be run using PQ-VEINS in the 
+virtual machine linked above. The various runtime configurations are enumerated in 
+
+    veins/examples/veins/omnetpp.ini
+
+To run simulations using PQ-VEINS, begin by launching the required background processes.
+Open a terminal and use the command
+
+    veins_launchd -vv
+
+Then, in a new terminal, navigate to the PQ-VEINS application directory:
+
+    cd /home/veins/src/veins/examples/veins
+
+Here, the `run` utility can be used to execute any configuration described in `omnetpp.ini`.
+For example,
+
+    ./run -u Cmdenv -c V2V-Falcon-BPSK12-WITHP2PCD-500MS
+
+will execute a scenario with Falcon used for message signing and verification, DSRC communication
+set to a data rate that corresponds to BPSK 1/2, P2PCD enabled, and the typical 500ms gap between
+full-certificate SPDU transmissions by a given vehicle.
 
 ## Analyzing PQ-VEINS Results
 
+Upon completion of a run, the results will be saved in scalar vector format within the `results`
+directory (`/home/veins/src/veins/examples/veins/results/`). We provide a script to quickly 
+convert the results from an unrestricted number of simulation iterations into CSV format:
+
+      python3 ./process_results.py
+
+Results stored in the CSV files will then be accessible within the `results` folder and can
+be post-processed easily in whatever manner one may desire.
