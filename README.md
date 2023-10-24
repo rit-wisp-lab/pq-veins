@@ -20,6 +20,24 @@ and publications.
 >(SPDX-License-Identifier: GPL-2.0-or-later OR CC-BY-SA-4.0). Full license texts
 >are available with the source distribution.
 
+This repository is made available as part of an artifact submission to the 2024 Network and Distributed 
+System Security Symposium (NDSS), associated with the following paper:
+
+Geoff Twardokus, Nina Bindel, Hanif Rahbari, and Sarah McCarthy, "When Cryptography Needs a Hand: Practical Post-Quantum Authentication for V2V Communications," _Network and Distributed System Security Symposium (NDSS 2024)_, San Diego, CA, Feb. 2024.
+
+Bibtex:
+
+    @inproceedings{twardokus2024when,
+        author = "Geoff Twardokus and Nina Bindel and Hanif Rahbari and Sarah McCarthy",
+        title = "When Cryptography Needs a Hand: Practical Post-Quantum Authentication for {V2V} Communications",
+        booktitle = "Proc. Network and Distributed System Security Symposium (NDSS)",
+        month = feb,
+        year = "2024",
+        address = "San Diego, CA",
+        pages = ""
+    }
+
+
 ## Installing PQ-VEINS
 
 PQ-VEINS is based on Instant VEINS, a virtual machine-based release of the VEINS 
