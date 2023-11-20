@@ -37,6 +37,24 @@ Bibtex:
         pages = ""
     }
 
+## Repository Structure
+
+PQ-VEINS is an extension of VEINS (see above). This implementation is based on Instant VEINS version 5.2, 
+which is a release of VEINS packaged in a virtual machine for easy distribution and portability. 
+
+This repository has a simple structure. Documentation can be found in `doc`, example scenario configuration files
+can be found in `examples`, and all source code is in `src`. Describing the entire existing VEINS project is beyond our 
+scope; however, specific changes/additions made to implement PQ-VEINS are enumerated as follows:
+- The PQ-V2V protocol described in our NDSS paper is implemented as an application, PQV2VApp, that is run by 
+simulated vehicles. The implementation files for PQV2VApp are in `src/veins/modules/application/traci`.
+- Source files to implement V2V messages required for PQC support (including digitally signed messages, P2PCD learning
+requests and responses, etc.) can be found in `src/veins/modules/messages`.
+- Example scenario configurations for various instantiations of the _Partially Hybrid_ protocol from our NDSS paper
+can be found in `examples/omnetpp_ini` (e.g., the parameters to run ECDSA-secured V2V using a data rate of 6 Mbps and
+no peer-to-peer certificate sharing can be found under `[Config V2V-ECDSA-BPSK12-NOP2PCD-500MS]` in that file).
+
+Complete documentation for VEINS beyond the above modifications made to implement PQ-VEINS can be found on the main
+VEINS project, available on GitHub at https://github.com/sommer/instant-veins/tree/instant-veins-5.2-i1. 
 
 ## Installing PQ-VEINS
 
