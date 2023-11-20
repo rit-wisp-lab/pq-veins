@@ -56,6 +56,19 @@ no peer-to-peer certificate sharing can be found under `[Config V2V-ECDSA-BPSK12
 Complete documentation for VEINS beyond the above modifications made to implement PQ-VEINS can be found on the main
 VEINS project, available on GitHub at https://github.com/sommer/instant-veins/tree/instant-veins-5.2-i1. 
 
+## Evaluation Requirements and Supported Environments
+
+### Hardware
+No hardware is required beyond a "commodity PC." As defined by the 
+[NDSS 2024 Call for Artifacts](https://web.archive.org/web/20230930035437/https://secartifacts.github.io/ndss2024/call), 
+"[a] commodity desktop machine is defined as one with an x86-64 CPU with 8 cores and 16 GB of RAM running a recent Linux 
+or Windows operating system."
+
+### Software
+A virtual machine containing the pre-configured artifact is available from [](). This virtual machine was 
+created and evaluated using Virtualbox version 7.0.8 r156879 (Qt5.15.2), which is freely available from Oracle at 
+https://www.virtualbox.org. We recommend users and evaluators use the same version to ensure consistency.
+
 ## Installing PQ-VEINS
 
 PQ-VEINS is based on Instant VEINS, a virtual machine-based release of the VEINS 
