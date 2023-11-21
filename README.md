@@ -1,5 +1,7 @@
 # PQ-VEINS
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10158027.svg)](https://doi.org/10.5281/zenodo.10158027)
+
 *PQ-VEINS is an extension of VEINS, whose README is included here for attribution*
 
 > Veins - The open source vehicular network simulation framework.
@@ -56,18 +58,39 @@ no peer-to-peer certificate sharing can be found under `[Config V2V-ECDSA-BPSK12
 Complete documentation for VEINS beyond the above modifications made to implement PQ-VEINS can be found on the main
 VEINS project, available on GitHub at https://github.com/sommer/instant-veins/tree/instant-veins-5.2-i1. 
 
+## Minimum Working Example
+An Ubuntu 22.04 virtual machine that is pre-configured to compile and run the artifact is archived in OVA format
+at [doi:10.5281/zenodo.10160535](https://doi.org/10.5281/zenodo.10160535). This virtual machine was
+created and evaluated using Virtualbox version 7.0.8 r156879 (Qt5.15.2), which is freely available from Oracle at
+https://www.virtualbox.org. We recommend users and evaluators use the same version to ensure consistency.
+
 ## Evaluation Requirements and Supported Environments
+
+### Supported operating system
+PQ-VEINS was built and tested using Instant Veins, which is based on Debian Linux. VEINS, and hence PQ-VEINS, _should_
+be able to run on any mainstream PC, Mac, or Linux operating system, but no testing or guarantee is given for operating
+systems aside from Instant Veins and its associated Debian OS.
+
+### Software
+We have built and evaluated our artifacts using [Instant VEINS](https://veins.car2x.org/documentation/instant-veins/),
+a virtual machine-based version of the [VEINS](https://veins.car2x.org) simulator
+tool that comes pre-packaged with all tools and dependencies installed in a Debian Linux instance. Due to the complexity
+of installing and configuring multiple components (OmNET++, SUMO, INET Framework, SimuLTE, etc.) that all have to work
+together in order to operate VEINS, we strongly encourage anyone interested in PQ-VEINS to start with the virtual
+machine provided above (see
+Minumum Working Example) and proceed from there.
+
+However, VEINS can also be installed from source if desired - users with
+a specific need that requires this approach should refer to the
+[VEINS installation instructions](https://veins.car2x.org/tutorial/) and configure the VEINS
+environment and its dependencies, and can then install PQ-VEINS by copying two directories from our archived repository
+into the freshly installed environment (see detailed instructions below).
 
 ### Hardware
 No hardware is required beyond a "commodity PC." As defined by the 
 [NDSS 2024 Call for Artifacts](https://web.archive.org/web/20230930035437/https://secartifacts.github.io/ndss2024/call), 
 "[a] commodity desktop machine is defined as one with an x86-64 CPU with 8 cores and 16 GB of RAM running a recent Linux 
 or Windows operating system."
-
-### Software
-A virtual machine containing the pre-configured artifact is available from [](). This virtual machine was 
-created and evaluated using Virtualbox version 7.0.8 r156879 (Qt5.15.2), which is freely available from Oracle at 
-https://www.virtualbox.org. We recommend users and evaluators use the same version to ensure consistency.
 
 ## Installing PQ-VEINS
 
