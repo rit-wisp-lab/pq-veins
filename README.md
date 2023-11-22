@@ -59,9 +59,8 @@ Complete documentation for VEINS beyond the above modifications made to implemen
 VEINS project, available on GitHub at https://github.com/sommer/instant-veins/tree/instant-veins-5.2-i1. 
 
 ## Minimum Working Example
-An Ubuntu 22.04 virtual machine that is pre-configured to compile and run the artifact is archived in OVA format
-at [doi:10.5281/zenodo.10160535](https://doi.org/10.5281/zenodo.10160535). This virtual machine was
-created and evaluated using Virtualbox version 7.0.8 r156879 (Qt5.15.2), which is freely available from Oracle at
+A Debian Linux virtual machine that is pre-configured to compile and run the artifact is archived in OVA format
+at [doi:10.5281/zenodo.10160535](https://doi.org/10.5281/zenodo.10160535). This virtual machine was evaluated using Virtualbox version 7.0.8 r156879 (Qt5.15.2), which is freely available from Oracle at
 https://www.virtualbox.org. We recommend users and evaluators use the same version to ensure consistency.
 
 ## Evaluation Requirements and Supported Environments
