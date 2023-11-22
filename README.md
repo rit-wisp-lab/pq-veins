@@ -86,6 +86,9 @@ a specific need that requires this approach should refer to the
 environment and its dependencies, and can then install PQ-VEINS by copying two directories from our archived repository
 into the freshly installed environment (see detailed instructions below).
 
+No software is required beyond what is pre-installed with Instant VEINS and/or required to install VEINS from source as
+per the linked instructions above from the VEINS project.
+
 ### Hardware
 No hardware is required beyond a "commodity PC." As defined by the 
 [NDSS 2024 Call for Artifacts](https://web.archive.org/web/20230930035437/https://secartifacts.github.io/ndss2024/call), 
@@ -129,6 +132,11 @@ A variety of pre-configured demonstration scenarios can be run using PQ-VEINS in
 virtual machine linked above. The various runtime configurations are enumerated in 
 
     veins/examples/veins/omnetpp.ini
+
+_Note that our provided config file enumerates the runtime configurations we consider to be
+part of this artifact, but `omnetpp.ini` can be further customized as desired (see 
+the [OmNET++ manual](https://doc.omnetpp.org/omnetpp/manual/) for guidance on syntax and 
+options for formatting this file)._
 
 To run simulations using PQ-VEINS, begin by launching the required background processes.
 Open a terminal and use the command
