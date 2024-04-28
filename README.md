@@ -1,6 +1,6 @@
 # PQ-VEINS
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10158027.svg)](https://doi.org/10.5281/zenodo.10158027)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10189557.svg)](https://doi.org/10.5281/zenodo.10189557)
 
 *PQ-VEINS is an extension of VEINS, whose README is included here for attribution*
 
